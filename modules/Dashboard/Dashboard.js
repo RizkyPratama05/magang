@@ -1,13 +1,33 @@
-// Script ini akan dijalankan setelah template utama *.html selesai di load
 (function() {
     MyApp.renderMainTpl();
-    MyApp.loadModuleCss();
-    // MyApp.loadModuleCss('style.css');
-    // simulasi loading... hide setelah 500ms
-    setTimeout(function() {
-        MyApp.$me('.overlay').hide();
-    }, 500);
-    // $('.loading').hide();
-})();
+    var $me = MyApp.$me;
 
-//# sourceURL=Dashboard.js
+    // Load Summary Data
+    MyApp.ajax({
+        option: 'ACTION',
+        action: 'getSummary'
+    }, function(resp) {
+        if (resp.success) {
+            $me('#countMatrix').text(resp.countMatrix);
+            $me('#countUnit').text(resp.countUnit);
+            
+            // Render Chart
+            Highcharts.chart('chartContainer', {
+                chart: { type: 'column' },
+                title: { text: '' },
+                xAxis: { categories: resp.years },
+                yAxis: { title: { text: 'Jumlah Data Diinput' } },
+                series: [{
+                    name: 'Jumlah Entri',
+                    data: resp.chartData,
+                    color: '#3276b1'
+                }]
+            });
+        }
+    });
+
+    setTimeout(function() {
+        $me('.overlay').hide();
+    }, 500);
+
+})();

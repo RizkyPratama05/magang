@@ -162,6 +162,43 @@
     }
 
     // ====================================================================
+    // LOAD DROPDOWNS: Tahun & Unit
+    // ====================================================================
+    function loadDropdowns() {
+        // Load Tahun
+        MyApp.ajax({ option: 'ACTION', action: 'listTahun' }, function(resp) {
+            if (resp.success) {
+                var html = '';
+                $.each(resp.result, function(i, v) {
+                    html += '<option value="' + v.tahun + '">' + v.tahun + '</option>';
+                });
+                $me('#cbTahunMatriks').html(html);
+                
+                // Set to current year if possible
+                var curYear = new Date().getFullYear();
+                $me('#cbTahunMatriks').val(curYear);
+            }
+        });
+
+        // Load Unit (Only for Admin)
+        var userData = JSON.parse(MyApp.userData);
+        if (userData.isadmin == 1) {
+            $me('#cbUnitMatriks').show();
+            MyApp.ajax({ option: 'ACTION', action: 'listUnit' }, function(resp) {
+                if (resp.success) {
+                    var html = '<option value="0">-- Pilih Dinas --</option>';
+                    $.each(resp.result, function(i, v) {
+                        html += '<option value="' + v.id + '">' + v.text + '</option>';
+                    });
+                    $me('#cbUnitMatriks').html(html);
+                }
+            });
+        }
+    }
+
+    loadDropdowns();
+
+    // ====================================================================
     // SECTION 2: DETAIL MATRIKS
     // ====================================================================
     function showDetail(row) {
@@ -169,15 +206,63 @@
         $me('#detailKode').text('Kode: ' + row.kode_data_pilah + ' | Instansi: ' + (row.instansi || '-'));
         // Set hidden fields di modal baris/kolom (global karena modal pindah ke body)
         $('.input-kode-dp').val(row.kode_data_pilah);
-        // Set tahun ke tahun sekarang jika ada
-        var curYear = new Date().getFullYear();
-        $me('#cbTahunMatriks option[value="' + curYear + '"]').prop('selected', true);
+
+        // ROLE CHECK: Sembunyikan manajemen baris/kolom jika bukan admin
+        var userData = JSON.parse(MyApp.userData);
+        if (userData.isadmin != 1) {
+            $me('.btTambahBaris, .btTambahKolom').hide();
+            $me('#panelBaris, #panelKolom').hide();
+            $me('#panelMatriks').removeClass('col-md-8').addClass('col-md-12');
+        } else {
+            $me('.btTambahBaris, .btTambahKolom').show();
+            $me('#panelBaris, #panelKolom').show();
+            $me('#panelMatriks').removeClass('col-md-12').addClass('col-md-8');
+        }
 
         showSection('sectionDetail');
         loadBaris();
         loadKolom();
         loadMatriks();
     }
+
+    // ====================================================================
+    // KECAMATAN REFERENCE MODAL
+    // ====================================================================
+    var kecamatanSleman = [
+        "Moyudan", "Minggir", "Seyegan", "Godean", "Gamping", "Mlati", "Depok", "Berbah", 
+        "Prambanan", "Kalasan", "Ngemplak", "Ngaglik", "Sleman", "Tempel", "Turi", "Pakem", "Cangkringan"
+    ];
+
+    $('.btRefBaris').on('click', function() {
+        renderRefBaris('');
+        $('#modalRefBaris').modal('show');
+    });
+
+    $('#searchRefBaris').on('keyup', function() {
+        renderRefBaris($(this).val());
+    });
+
+    function renderRefBaris(search) {
+        var html = '';
+        var filtered = kecamatanSleman.filter(function(v) {
+            return v.toLowerCase().indexOf(search.toLowerCase()) > -1;
+        });
+        $.each(filtered, function(i, v) {
+            html += '<tr>' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td>' + v + '</td>' +
+                '<td><button class="btn btn-xs btn-success btPilihKec" data-nama="' + v + '">Pilih</button></td>' +
+                '</tr>';
+        });
+        if (filtered.length == 0) html = '<tr><td colspan="3" class="text-center">Tidak ditemukan</td></tr>';
+        $('#tableRefBaris tbody').html(html);
+    }
+
+    $('#tableRefBaris').on('click', '.btPilihKec', function() {
+        var nama = $(this).data('nama');
+        $('#nama_baris_input').val(nama);
+        $('#modalRefBaris').modal('hide');
+    });
 
     // Kembali ke daftar
     $me('.btKembali').on('click', function () {
@@ -188,8 +273,21 @@
     });
 
     // ====================================================================
-    // PANEL BARIS
+    // PANEL BARIS & AUTO CODE
     // ====================================================================
+    
+    $('.btAutoCode').on('click', function() {
+        MyApp.ajax({
+            option: 'ACTION', action: 'generateCodeBaris', 
+            kode_data_pilah: curKode 
+        }, function(resp) {
+            if (resp.success) {
+                $('#kode_baris_input').val(resp.code);
+            }
+        });
+    });
+
+
     function loadBaris() {
         MyApp.ajax({
             option: 'ACTION', action: 'listBaris', kode_data_pilah: curKode
@@ -317,14 +415,17 @@
     // ====================================================================
     function loadMatriks() {
         var tahun = $me('#cbTahunMatriks').val();
+        var id_instansi = $me('#cbUnitMatriks').val();
+
         MyApp.ajax({
             option: 'ACTION', action: 'getMatriks',
-            kode_data_pilah: curKode, tahun: tahun
+            kode_data_pilah: curKode, tahun: tahun, id_instansi: id_instansi
         }, function (resp) {
             if (!resp.success) return;
 
             var kolom = resp.kolom;
             var baris = resp.baris;
+            var id_instansi_res = resp.id_instansi;
 
             if (kolom.length === 0 || baris.length === 0) {
                 $me('#matriksTable').hide();
@@ -351,13 +452,10 @@
             html += '<tbody>';
             $.each(baris, function (bi, b) {
                 html += '<tr>';
-                html += '<td class="cell-no">' + (b.no_urut || (bi + 1)) + '</td>';
-                html += '<td class="cell-nama">' + b.nama_baris + '</td>';
+                html += '<td class="text-center">' + (b.no_urut || (bi + 1)) + '</td>';
+                html += '<td>' + b.nama_baris + '</td>';
                 $.each(b.cells, function (ci, c) {
-                    html += '<td><input type="text" class="cell-input" ' +
-                        'data-kode-baris="' + b.kode_baris + '" ' +
-                        'data-kode-kolom="' + c.kode_kolom + '" ' +
-                        'value="' + (c.val !== null && c.val !== '' ? c.val : '') + '"></td>';
+                    html += '<td class="text-right">' + (c.val !== null && c.val !== '' ? c.val : '-') + '</td>';
                 });
                 html += '</tr>';
             });
@@ -367,34 +465,32 @@
         });
     }
 
-    // Auto-save cell on blur
-    $me('#matriksContainer').on('blur', '.cell-input', function () {
-        var $input = $(this);
-        var val = $input.val();
-        var kodeBaris = $input.data('kode-baris');
-        var kodeKolom = $input.data('kode-kolom');
+    // Refresh matriks on tahun/unit change
+    $me('#cbTahunMatriks').on('change', function () { loadMatriks(); });
+    $me('#cbUnitMatriks').on('change', function () { loadMatriks(); });
+    $me('.btRefreshMatriks').on('click', function () { loadMatriks(); });
+    
+    $me('.btExportExcel').on('click', function() {
         var tahun = $me('#cbTahunMatriks').val();
-
-        MyApp.ajax({
-            option: 'ACTION', action: 'saveCell',
-            data: {
-                kode_data_pilah: curKode,
-                kode_baris: kodeBaris,
-                kode_kolom: kodeKolom,
-                tahun: tahun,
-                val: val
-            }
-        }, function (resp) {
-            if (resp.success) {
-                $input.css('background', '#d4edda');
-                setTimeout(function () { $input.css('background', ''); }, 600);
-            }
-        });
+        var id_instansi = $me('#cbUnitMatriks').val() || 0;
+        var url = 'export.php?Module=DataPilah&option=ACTION&action=exportExcel&kode_data_pilah=' + curKode + '&tahun=' + tahun + '&id_instansi=' + id_instansi;
+        window.open(url, '_blank');
     });
 
-    // Refresh matriks on tahun change
-    $me('#cbTahunMatriks').on('change', function () { loadMatriks(); });
-    $me('.btRefreshMatriks').on('click', function () { loadMatriks(); });
+    $me('.btExportPdf').on('click', function() {
+        var tahun = $me('#cbTahunMatriks').val();
+        var id_instansi = $me('#cbUnitMatriks').val() || 0;
+        var url = 'export.php?Module=DataPilah&option=ACTION&action=exportPdf&kode_data_pilah=' + curKode + '&tahun=' + tahun + '&id_instansi=' + id_instansi;
+        window.open(url, '_blank');
+    });
+
+    // ====================================================================
+    // INIT: sembunyikan overlay loading
+    // ====================================================================
+    $('.modal-backdrop').addClass('hide');
+    setTimeout(function () {
+        $me('.overlay').hide();
+    }, 500);
 
     // ====================================================================
     // INIT: sembunyikan overlay loading

@@ -131,11 +131,12 @@
         <div class="jarviswidget" style="border:1px solid #ccc; border-radius:4px;">
             <header style="background:#d9534f; color:#fff; padding:8px 12px;">
                 <h2 style="font-size:14px; margin:0;"><i class="fa fa-th"></i> Preview Matriks</h2>
-                <div class="pull-right" style="margin-top:-4px;">
-                    <select id="cbTahunMatriks" class="form-control input-sm" style="display:inline-block; width:auto;">
-                        {{{tahun_options}}}
-                    </select>
-                    <button class="btn btn-xs btn-warning btRefreshMatriks"><i class="fa fa-refresh"></i></button>
+                <div class="pull-right" style="margin-top:-4px; display: flex; gap: 5px;">
+                    <select id="cbUnitMatriks" class="form-control input-sm" style="display:none; width:200px;"></select>
+                    <select id="cbTahunMatriks" class="form-control input-sm" style="display:inline-block; width:auto;"></select>
+                    <button class="btn btn-xs btn-warning btRefreshMatriks" title="Refresh Matriks"><i class="fa fa-refresh"></i></button>
+                    <button class="btn btn-xs btn-success btExportExcel" title="Export Excel"><i class="fa fa-file-excel-o"></i></button>
+                    <button class="btn btn-xs btn-danger btExportPdf" title="Export PDF"><i class="fa fa-file-pdf-o"></i></button>
                 </div>
             </header>
             <div style="padding:10px; overflow-x:auto;" id="matriksContainer">
@@ -215,11 +216,29 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Kode Baris</label>
-                        <div class="col-md-9"><input type="text" class="form-control" name="kode_baris" placeholder="Contoh: 01.18"></div>
+                        <div class="col-md-9">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="kode_baris" id="kode_baris_input" placeholder="Contoh: 01.18">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btAutoCode" type="button" title="Auto Generate Kode">
+                                        <i class="fa fa-magic"></i> Auto
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Nama Baris</label>
-                        <div class="col-md-9"><input type="text" class="form-control" name="nama_baris" placeholder="Contoh: Nama Kecamatan"></div>
+                        <div class="col-md-9">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="nama_baris" id="nama_baris_input" placeholder="Contoh: Nama Kecamatan">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btRefBaris" type="button" title="Ambil dari Referensi">
+                                        <i class="fa fa-search"></i> Ref
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Aktif</label>
@@ -274,21 +293,44 @@
                                 <option value="3">L+P+LP (Semua)</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Aktif</label>
-                        <div class="col-md-9">
-                            <select class="form-control" name="aktif">
-                                <option value="1">Ya</option>
-                                <option value="0">Tidak</option>
-                            </select>
-                        </div>
+
                     </div>
                 </div>
             </form>
             <div class="modal-footer">
                 <button type="button" class="btSimpanKolom btn btn-primary">Simpan Kolom</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Referensi Baris (Kecamatan) -->
+<div class="modal fade" id="modalRefBaris" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-search"></i> Pilih Referensi Baris</h4>
+            </div>
+            <div class="modal-body no-padding">
+                <div style="padding:10px;">
+                    <input type="text" id="searchRefBaris" class="form-control" placeholder="Cari kecamatan...">
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-bordered" id="tableRefBaris" style="margin-bottom:0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">No</th>
+                                <th>Nama Kecamatan</th>
+                                <th style="width: 80px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
