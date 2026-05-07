@@ -21,8 +21,9 @@
     });
 
     MyApp.ajax({ Module: 'DataPilah', option: 'ACTION', action: 'listUnit' }, function(resp) {
-        if (resp.success) {
-            var html = '<option value="0">-- Semua Dinas --</option>';
+        if (resp && resp.success) {
+            var html = '';
+            // backend untuk operator akan mengirim hanya 1 unit (miliknya), admin boleh banyak.
             $.each(resp.result, function(i, v) {
                 html += '<option value="' + v.id + '">' + v.text + '</option>';
             });
@@ -30,9 +31,10 @@
         }
     });
 
+
     function loadAll() {
-        MyApp.ajax({ option: 'ACTION', action: 'listAll' }, function(resp) {
-            if (resp.success) {
+        MyApp.ajax({ Module: 'DataPilah', option: 'ACTION', action: 'listAllAssigned' }, function(resp) {
+            if (resp && resp.success) {
                 var html = '';
                 $.each(resp.data, function(i, v) {
                     html += '<div class="col-md-3">' +
@@ -45,6 +47,7 @@
             }
         });
     }
+
 
     loadAll();
 

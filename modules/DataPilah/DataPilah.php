@@ -330,9 +330,45 @@ class DataPilah extends Database
     }
 
     public function ACTION_listUnit() {
+        // Untuk operator, tidak perlu pilihan dinas lain
+        $os = new Os();
+        $userData = json_decode($os->getUserData());
+
+        if (isset($userData->isadmin) && $userData->isadmin == 0) {
+            $id = $os->getUserUnit();
+            $sql = "SELECT id, nama_instansi as text FROM reff_unit_kerja WHERE id = $id";
+            echo $this->dbDataSelectAndReturnAll($sql);
+            return;
+        }
+
         $sql = "SELECT id, nama_instansi as text FROM reff_unit_kerja ORDER BY nama_instansi ASC";
         echo $this->dbDataSelectAndReturnAll($sql);
     }
+
+    // =====================================================================
+    // LIST KARTU MATRiks (Header data_pilah) terfilter mapping user unit
+    // =====================================================================
+    public function ACTION_listAllAssigned(){
+        $os = new Os();
+        $userData = json_decode($os->getUserData());
+        $isAdmin = isset($userData->isadmin) ? (int)$userData->isadmin : 0;
+
+        if($isAdmin == 1){
+            $sql = "SELECT * FROM data_pilah WHERE aktif = 1";
+            echo json_encode(array('success'=>true,'data'=>$this->dbDataSelectAndReturnAll($sql,null,true)));
+            return;
+        }
+
+        $id_instansi = $os->getUserUnit();
+        $sql = "SELECT dp.*
+                FROM data_pilah dp
+                JOIN mapping_matrix_unit m ON m.id_data_pilah = dp.id_data_pilah
+                WHERE m.id_instansi = $id_instansi AND dp.aktif = 1";
+
+        $data = $this->dbDataSelectAndReturnAll($sql,null,true);
+        echo json_encode(array('success'=>true,'data'=>$data));
+    }
+
 
     // =====================================================================
     // AUTO CODE: Generate kode baris (0201, 0202, dst)
