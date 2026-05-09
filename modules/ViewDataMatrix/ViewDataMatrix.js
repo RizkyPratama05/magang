@@ -21,8 +21,9 @@
     });
 
     MyApp.ajax({ Module: 'DataPilah', option: 'ACTION', action: 'listUnit' }, function(resp) {
-        if (resp.success) {
-            var html = '<option value="0">-- Semua Dinas --</option>';
+        if (resp && resp.success) {
+            var html = '';
+            // backend untuk operator akan mengirim hanya 1 unit (miliknya), admin boleh banyak.
             $.each(resp.result, function(i, v) {
                 html += '<option value="' + v.id + '">' + v.text + '</option>';
             });
@@ -30,21 +31,25 @@
         }
     });
 
+
     function loadAll() {
-        MyApp.ajax({ option: 'ACTION', action: 'listAll' }, function(resp) {
-            if (resp.success) {
+        MyApp.ajax({ Module: 'DataPilah', option: 'ACTION', action: 'listAllAssigned' }, function(resp) {
+            if (resp && resp.success) {
                 var html = '';
                 $.each(resp.data, function(i, v) {
+                    var judul = v.judul_data_pilah || '';
+                    var kode = v.kode_data_pilah || '';
                     html += '<div class="col-md-3">' +
-                        '<div class="view-card jarviswidget jarviswidget-color-greenLight" data-kode="' + v.kode_data_pilah + '" data-judul="' + v.judul_data_pilah + '">' +
+                        '<div class="view-card jarviswidget jarviswidget-color-greenLight" data-kode="' + kode + '" data-judul="' + judul + '">' +
                         '<div style="padding: 12px; border: 1px solid #ddd; background:#fff; border-radius:4px; height: 100px; display:flex; align-items:center; justify-content:center; text-align:center;">' +
-                        '<h4 style="margin:0; font-size:14px;">' + v.judul_data_pilah + '</h4>' +
+                        '<h4 style="margin:0; font-size:14px;">' + judul + '</h4>' +
                         '</div></div></div>';
                 });
                 $me('#listViewMatriks').html(html);
             }
         });
     }
+
 
     loadAll();
 
