@@ -116,11 +116,131 @@ include_once '../public-service.php';
             color: #333;
             margin-bottom: 10px;
         }
+
+        /* ---- NEW DASHBOARD STYLES ---- */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeInDown 0.5s ease both; }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 15px;
+            padding: 50px 40px;
+            color: #fff;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(30,60,114,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-banner::after {
+            content: '\f19c';
+            font-family: 'Feather';
+            position: absolute;
+            right: -20px;
+            bottom: -50px;
+            font-size: 250px;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+        }
+        .hero-title { font-size: 36px; font-weight: 800; margin-bottom: 15px; }
+        .hero-subtitle { font-size: 18px; opacity: 0.9; margin-bottom: 30px; max-width: 800px; line-height: 1.6; }
+        .hero-cta {
+            background: #f5af19;
+            background: linear-gradient(to right, #f12711, #f5af19);
+            color: #fff;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(241,39,17,0.3);
+        }
+        .hero-cta:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(241,39,17,0.5); color: #fff; }
+
+        .stat-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 4px solid #f5af19;
+            transition: all 0.3s;
+        }
+        .stat-box:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .stat-icon { font-size: 30px; color: #1e3c72; margin-bottom: 15px; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #333; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; color: #777; font-weight: 600; text-transform: uppercase; }
+
+        /* ---- SIDEBAR TOGGLE LOGIC ---- */
+        body.no-sidebar .app-sidebar { display: none; }
+        body.no-sidebar .app-sidebar__toggle { display: none !important; }
+        body.no-sidebar .app-content { margin-left: 0 !important; }
+        @media (max-width: 991px) {
+            body.no-sidebar .app-content { padding-top: 20px !important; }
+        }
+
+        /* ---- PREMIUM ENHANCEMENTS ---- */
+        .page-main {
+            background: #f4f7fb;
+            background-image: radial-gradient(#d1d5db 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+        }
+
+        .header-brand-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1e3c72;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-brand-text span { color: #f5af19; }
+
+        /* Floating Animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating { animation: float 4s ease-in-out infinite; }
+
+        /* Feature Card */
+        .feature-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        .feature-item:hover {
+            border-color: #3276b1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        .feature-icon-wrap {
+            width: 45px; height: 45px;
+            background: #eff6ff;
+            color: #1e3c72;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .feature-text h4 { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 5px; }
+        .feature-text p { font-size: 13px; color: #64748b; margin: 0; line-height: 1.5; }
     </style>
 
 </head>
 
-<body class="app sidebar-mini Left-menu-Default Sidemenu-left-icons">
+<body class="app sidebar-mini Left-menu-Default Sidemenu-left-icons no-sidebar">
 
     <!-- GLOBAL-LOADER -->
     <div id="global-loader">
@@ -135,13 +255,11 @@ include_once '../public-service.php';
             <!--APP-SIDEBAR-->
             <div class="app-header header-search-icon">
                 <div class="header-style1">
-                    <a class="header-brand" href="index.php">
-                        <img src="./assets/images/brand/logo.png" class="header-brand-img desktop-logo" alt="logo">
-                        <img src="./assets/images/brand/logo-1.png" class="header-brand-img mobile-logo" alt="logo">
-                    </a><!-- LOGO -->
-                    <a class="header-brand header-brand1" href="index.php">
-                        <img src="./assets/images/brand/logo-white.png" class="header-brand-img desktop-logo" alt="logo">
-                        <img src="./assets/images/brand/logo-1.png" class="header-brand-img mobile-logo" alt="logo">
+                    <a class="header-brand" href="index.php" style="text-decoration:none; padding-top: 15px;">
+                        <div class="header-brand-text">
+                            <i class="fe fe-shield" style="color: #1e3c72; font-size: 24px;"></i>
+                            SIMDA<span>GENAK</span>
+                        </div>
                     </a><!-- LOGO -->
                 </div>
                 <div class="app-sidebar__toggle" data-toggle="sidebar">
@@ -222,8 +340,99 @@ include_once '../public-service.php';
                     <!-- PAGE-HEADER END -->
 
                     <!-- ============================================ -->
-                    <!-- FILTER CARD: 3 Dropdown + Tombol Cari        -->
+                    <!-- VIEW 1: LANDING DASHBOARD (DITAMPILKAN AWAL) -->
                     <!-- ============================================ -->
+                    <div id="viewDashboard" class="view-section active">
+                        <div class="hero-banner">
+                            <div class="floating">
+                                <h1 class="hero-title">Sistem Informasi Data Gender dan Anak (SIMDAGENAK)</h1>
+                                <p class="hero-subtitle">
+                                    Selamat datang di platform digital Kabupaten Sleman yang dirancang khusus untuk mengintegrasikan, mengelola, dan menyajikan data pilah gender dan anak dari berbagai instansi pemerintah secara akurat, transparan, dan akuntabel.
+                                </p>
+                            </div>
+                            <button class="hero-cta" id="btnExplore">
+                                <i class="fe fe-layers mr-2"></i> Jelajahi Data Matriks
+                            </button>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6 col-md-3">
+                                <div class="stat-box">
+                                    <div class="stat-icon"><i class="fe fe-home"></i></div>
+                                    <div class="stat-value">42</div>
+                                    <div class="stat-label">Instansi Terhubung</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="stat-box" style="border-color: #6366f1;">
+                                    <div class="stat-icon" style="color: #6366f1;"><i class="fe fe-grid"></i></div>
+                                    <div class="stat-value">1.248</div>
+                                    <div class="stat-label">Total Matriks Data</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="stat-box" style="border-color: #10b981;">
+                                    <div class="stat-icon" style="color: #10b981;"><i class="fe fe-check-square"></i></div>
+                                    <div class="stat-value">100%</div>
+                                    <div class="stat-label">Data Terverifikasi</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="stat-box" style="border-color: #ef4444;">
+                                    <div class="stat-icon" style="color: #ef4444;"><i class="fe fe-calendar"></i></div>
+                                    <div class="stat-value">2026</div>
+                                    <div class="stat-label">Tahun Aktif</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NEW: INTERACTIVE FEATURES SECTION -->
+                        <div class="row mt-5">
+                            <div class="col-md-12 mb-4">
+                                <h3 style="font-weight: 800; color: #1e293b; text-align:center;">Mengapa Menggunakan SIMDAGENAK?</h3>
+                                <p style="color: #64748b; text-align:center;">Platform terpadu untuk memantau kesejahteraan gender dan anak secara real-time.</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-item">
+                                    <div class="feature-icon-wrap"><i class="fe fe-zap"></i></div>
+                                    <div class="feature-text">
+                                        <h4>Akses Cepat</h4>
+                                        <p>Data dapat diakses dan divisualisasikan hanya dalam beberapa klik saja.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-item">
+                                    <div class="feature-icon-wrap"><i class="fe fe-shield"></i></div>
+                                    <div class="feature-text">
+                                        <h4>Data Terpercaya</h4>
+                                        <p>Sumber data langsung dari OPD terkait yang telah melalui proses validasi ketat.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-item">
+                                    <div class="feature-icon-wrap"><i class="fe fe-bar-chart-2"></i></div>
+                                    <div class="feature-text">
+                                        <h4>Visualisasi Modern</h4>
+                                        <p>Disertai grafik interaktif untuk mempermudah analisis tren dari tahun ke tahun.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- VIEW 2: MATRIX DATA (DISEMBUNYIKAN AWAL)     -->
+                    <!-- ============================================ -->
+                    <div id="viewMatrix" class="view-section">
+                        <div class="mb-4">
+                            <button class="btn btn-outline-primary" id="btnBackToHome">
+                                <i class="fe fe-arrow-left"></i> Kembali ke Beranda
+                            </button>
+                        </div>
+                        
+                        <!-- FILTER CARD: 3 Dropdown + Tombol Cari -->
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card filter-card">
@@ -321,7 +530,10 @@ include_once '../public-service.php';
                             </div>
                         </div>
                     </div>
+                    </div>
                     <!-- ROW CHARTS CLOSED -->
+
+                    </div><!-- /#viewMatrix -->
 
                 </div>
             </div>
@@ -382,10 +594,35 @@ include_once '../public-service.php';
 
     <!-- HIGHCHARTS (local) -->
     <script src="../plugins/highcharts/js/highcharts.js"></script>
-    <script src="../plugins/highcharts/js/modules/exporting.js" defer></script>
+    <script src="../plugins/highcharts/js/modules/exporting.js"></script>
 
     <!-- PUBLIC JS -->
     <script src="../public.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Toggle View Logic
+            $('#btnExplore').on('click', function() {
+                $('body').removeClass('no-sidebar');
+                $('#viewDashboard').removeClass('active');
+                setTimeout(function() {
+                    $('#viewDashboard').hide();
+                    $('#viewMatrix').show().addClass('active');
+                    // Refresh layout if needed
+                    $(window).trigger('resize');
+                }, 100);
+            });
+
+            $('#btnBackToHome').on('click', function() {
+                $('body').addClass('no-sidebar');
+                $('#viewMatrix').removeClass('active');
+                setTimeout(function() {
+                    $('#viewMatrix').hide();
+                    $('#viewDashboard').show().addClass('active');
+                }, 100);
+            });
+        });
+    </script>
 
 </body>
 

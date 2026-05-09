@@ -344,26 +344,65 @@ $(document).ready(function () {
             alert('Silakan cari data terlebih dahulu!');
             return;
         }
+
         var judulText = $('#judulData').text();
         var tableHtml = $('#dataTables').prop('outerHTML');
-        var printWin = window.open('', 'PrintWindow', 'width=900,height=600');
+
+        // Capture Charts (if visible)
+        var chart1Svg = '', chart2Svg = '';
+        if ($('#rowCharts').is(':visible') && typeof Highcharts !== 'undefined') {
+            $.each(Highcharts.charts, function (i, chart) {
+                if (chart && chart.renderTo) {
+                    var id = $(chart.renderTo).attr('id');
+                    if (id === 'chartBar') chart1Svg = chart.getSVG({ chart: { width: 800, height: 400 } });
+                    if (id === 'chartPie') chart2Svg = chart.getSVG({ chart: { width: 800, height: 400 } });
+                }
+            });
+        }
+
+        var printWin = window.open('', 'PrintWindow', 'width=1000,height=800');
         printWin.document.write('<html><head><title>Print - ' + judulText + '</title>');
         printWin.document.write('<style>');
-        printWin.document.write('body { font-family: Arial, sans-serif; margin: 20px; }');
-        printWin.document.write('h2 { text-align: center; margin-bottom: 15px; }');
-        printWin.document.write('table { width: 100%; border-collapse: collapse; font-size: 12px; }');
-        printWin.document.write('th, td { border: 1px solid #333; padding: 5px 8px; }');
-        printWin.document.write('th { background-color: #3276b1; color: #fff; text-align: center; }');
+        printWin.document.write('body { font-family: Arial, sans-serif; margin: 30px; color: #333; }');
+        printWin.document.write('h2 { text-align: center; margin-bottom: 20px; color: #1e3c72; }');
+        printWin.document.write('table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 30px; }');
+        printWin.document.write('th, td { border: 1px solid #999; padding: 6px 10px; }');
+        printWin.document.write('th { background-color: #f4f7fb !important; color: #1e3c72 !important; text-align: center; font-weight: bold; }');
         printWin.document.write('td { text-align: right; }');
         printWin.document.write('td:first-child { text-align: center; }');
         printWin.document.write('td:nth-child(2) { text-align: left; font-weight: bold; }');
+        printWin.document.write('.chart-container { text-align: center; margin-top: 30px; page-break-inside: avoid; }');
+        printWin.document.write('.chart-container svg { max-width: 100%; height: auto; }');
+        printWin.document.write('@media print { .no-print { display: none; } }');
         printWin.document.write('</style></head><body>');
+
         printWin.document.write('<h2>' + judulText + '</h2>');
+
+        // Add Table
         printWin.document.write(tableHtml);
+
+        // Add Charts
+        if (chart1Svg) {
+            printWin.document.write('<div class="chart-container"><h3>Visualisasi Grafik Batang</h3>' + chart1Svg + '</div>');
+        }
+        if (chart2Svg) {
+            printWin.document.write('<div class="chart-container"><h3>Visualisasi Grafik Lingkaran</h3>' + chart2Svg + '</div>');
+        }
+
+        // Auto-close script
+        printWin.document.write('<script>');
+        printWin.document.write('window.onload = function() { ');
+        printWin.document.write('  setTimeout(function() { ');
+        printWin.document.write('    window.print(); ');
+        printWin.document.write('    window.onafterprint = function() { window.close(); }; ');
+        printWin.document.write('    // Fallback for browsers that dont support onafterprint well');
+        printWin.document.write('    setTimeout(function() { if(!window.closed) window.close(); }, 500);');
+        printWin.document.write('  }, 500);');
+        printWin.document.write('};');
+        printWin.document.write('</script>');
+
         printWin.document.write('</body></html>');
         printWin.document.close();
-        printWin.focus();
-        setTimeout(function () { printWin.print(); }, 500);
     });
 
 });

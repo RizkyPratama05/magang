@@ -21,4 +21,19 @@ class Dashboard extends Database {
         
         echo json_encode($res);
     }
+
+    public function ACTION_getMatrixList() {
+        $sql = "SELECT kode_data_pilah, judul_data_pilah, instansi, aktif
+                FROM data_pilah
+                ORDER BY kode_data_pilah ASC";
+        $sth = $this->dbDataQuery($sql);
+        $data = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+        $res = array(
+            'success' => true,
+            'total'   => count($data),
+            'result'  => $data
+        );
+        echo json_encode($res);
+    }
 }

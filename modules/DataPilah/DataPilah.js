@@ -181,7 +181,7 @@
         });
 
         // Load Unit (Only for Admin)
-        var userData = JSON.parse(MyApp.userData);
+        var userData = MyApp.userData;
         if (userData.isadmin == 1) {
             $me('#cbUnitMatriks').show();
             MyApp.ajax({ option: 'ACTION', action: 'listUnit' }, function(resp) {
@@ -208,7 +208,7 @@
         $('.input-kode-dp').val(row.kode_data_pilah);
 
         // ROLE CHECK: Sembunyikan manajemen baris/kolom jika bukan admin
-        var userData = JSON.parse(MyApp.userData);
+        var userData = MyApp.userData;
         if (userData.isadmin != 1) {
             $me('.btTambahBaris, .btTambahKolom').hide();
             $me('#panelBaris, #panelKolom').hide();
@@ -483,14 +483,6 @@
         var url = 'export.php?Module=DataPilah&option=ACTION&action=exportPdf&kode_data_pilah=' + curKode + '&tahun=' + tahun + '&id_instansi=' + id_instansi;
         window.open(url, '_blank');
     });
-
-    // ====================================================================
-    // INIT: sembunyikan overlay loading
-    // ====================================================================
-    $('.modal-backdrop').addClass('hide');
-    setTimeout(function () {
-        $me('.overlay').hide();
-    }, 500);
 
     // ====================================================================
     // INIT: sembunyikan overlay loading

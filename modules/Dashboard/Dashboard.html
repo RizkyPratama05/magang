@@ -1,55 +1,463 @@
-<div class="{{module_id_class}}">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well" style="background: #fff; border-left: 5px solid #3276b1;">
-                <h1 style="margin-top: 0;">Selamat Datang, {{userData.nama}}</h1>
+<style>
+    /* ===============================================
+       DASHBOARD MODULE - Modern UI (PHP+jQuery Port)
+       =============================================== */
+    .db-module {
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    /* ---- NAV PILLS (view switcher) ---- */
+    .db-nav-pills {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        background: #fff;
+        padding: 8px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.08);
+        border: 1px solid #e8eaf0;
+        width: fit-content;
+    }
+    .db-nav-pills .db-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        border-radius: 9px;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+    .db-nav-pills .db-pill:hover {
+        background: #f1f5f9;
+        color: #334155;
+    }
+    .db-nav-pills .db-pill.active {
+        background: #3276b1;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(50,118,177,.3);
+    }
+    .db-nav-pills .db-pill i { font-size: 15px; }
+
+    /* ---- VIEWS ---- */
+    .db-view { display: none; }
+    .db-view.active {
+        display: block;
+        animation: dbFadeUp .35s ease both;
+    }
+    @keyframes dbFadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---- PAGE TITLE ---- */
+    .db-page-title { margin-bottom: 24px; }
+    .db-page-title h2 {
+        font-size: 26px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 4px;
+    }
+    .db-page-title p { color: #94a3b8; margin: 0; font-size: 14px; }
+
+    /* ---- WELCOME BANNER ---- */
+    .db-welcome {
+        background: linear-gradient(135deg, #3276b1 0%, #1a4f82 100%);
+        color: #fff;
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .db-welcome .db-welcome-icon {
+        background: rgba(255,255,255,.15);
+        border-radius: 12px;
+        width: 52px; height: 52px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+    .db-welcome h3 { margin: 0 0 4px; font-size: 20px; font-weight: 700; }
+    .db-welcome p { margin: 0; opacity: .8; font-size: 13px; }
+
+    /* ---- STAT CARDS ---- */
+    .db-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 1100px) { .db-cards-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .db-cards-grid { grid-template-columns: 1fr; } }
+
+    .db-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px 22px;
+        border: 1px solid #e8eaf0;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        transition: all .25s ease;
+        cursor: default;
+    }
+    .db-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.1); transform: translateY(-3px); }
+    .db-card-icon {
+        width: 44px; height: 44px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+        color: #fff;
+        margin-bottom: 16px;
+        transition: transform .25s ease;
+    }
+    .db-card:hover .db-card-icon { transform: scale(1.12); }
+    .db-card-icon.blue   { background: #3276b1; }
+    .db-card-icon.indigo { background: #6366f1; }
+    .db-card-icon.amber  { background: #f59e0b; }
+    .db-card-icon.green  { background: #22c55e; }
+    .db-card-label { font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .db-card-value { font-size: 32px; font-weight: 700; color: #1e293b; line-height: 1.1; margin-top: 4px; }
+
+    /* ---- CHART WIDGET ---- */
+    .db-chart-box {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e8eaf0;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        overflow: hidden;
+    }
+    .db-chart-box .db-box-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .db-chart-box .db-box-title { font-size: 15px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+    .db-chart-box .db-box-title i { color: #3276b1; }
+    .db-chart-box .db-box-body { padding: 20px; }
+
+    /* ---- MATRIX VIEW ---- */
+
+    /* Search bar */
+    .db-search-bar {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e8eaf0;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        padding: 16px 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .db-search-input-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 220px;
+    }
+    .db-search-input-wrap i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 14px;
+    }
+    .db-search-input {
+        width: 100%;
+        padding: 10px 14px 10px 38px;
+        border-radius: 9px;
+        border: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+        font-size: 14px;
+        color: #334155;
+        outline: none;
+        transition: all .2s;
+        box-sizing: border-box;
+    }
+    .db-search-input:focus { border-color: #3276b1; background: #fff; box-shadow: 0 0 0 3px rgba(50,118,177,.12); }
+
+    .db-filter-select {
+        padding: 10px 14px;
+        border-radius: 9px;
+        border: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+        font-size: 14px;
+        color: #334155;
+        outline: none;
+        cursor: pointer;
+        min-width: 140px;
+        transition: border-color .2s;
+    }
+    .db-filter-select:focus { border-color: #3276b1; }
+
+    .db-search-btn {
+        background: #3276b1;
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 10px 22px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+    .db-search-btn:hover { background: #1a4f82; box-shadow: 0 4px 12px rgba(50,118,177,.3); }
+
+    /* Matrix Table */
+    .db-matrix-table-box {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e8eaf0;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        overflow: hidden;
+    }
+    .db-matrix-table-box .db-box-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+    .db-matrix-table-box .db-box-title  { font-size: 15px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+    .db-matrix-table-box .db-box-title i { color: #3276b1; }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .db-table thead tr { background: #f8fafc; }
+    .db-table thead th {
+        padding: 12px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #94a3b8;
+        border-bottom: 1px solid #f1f5f9;
+        white-space: nowrap;
+    }
+    .db-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .15s; cursor: pointer; }
+    .db-table tbody tr:last-child { border-bottom: none; }
+    .db-table tbody tr:hover { background: #f8fafc; }
+    .db-table tbody tr:hover .db-cell-judul { color: #3276b1; }
+    .db-table td { padding: 14px 16px; color: #475569; vertical-align: middle; }
+    .db-cell-kode { font-weight: 700; color: #1e293b; font-family: monospace; font-size: 13px; }
+    .db-cell-judul { font-weight: 600; color: #334155; transition: color .15s; }
+
+    .db-badge {
+        display: inline-flex; align-items: center;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid transparent;
+    }
+    .db-badge.aktif   { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .db-badge.nonaktif { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+
+    .db-empty-row td {
+        padding: 40px 16px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+    .db-empty-row i { font-size: 28px; display: block; margin-bottom: 8px; }
+
+    /* ---- HERO SECTION ---- */
+    .db-hero {
+        background: #fff;
+        border-radius: 14px;
+        padding: 32px;
+        margin-bottom: 24px;
+        border: 1px solid #e8eaf0;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .db-hero::after {
+        content: '\f19c'; /* fa-university */
+        font-family: FontAwesome;
+        position: absolute;
+        right: -20px;
+        bottom: -30px;
+        font-size: 180px;
+        color: #f1f5f9;
+        z-index: 0;
+        opacity: 0.5;
+    }
+    .db-hero-content { position: relative; z-index: 1; max-width: 800px; }
+    .db-hero-title { font-size: 28px; font-weight: 800; color: #1e293b; margin-bottom: 12px; }
+    .db-hero-desc { font-size: 15px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+    .db-hero-btn {
+        background: #3276b1;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all .2s;
+    }
+    .db-hero-btn:hover { background: #1a4f82; transform: scale(1.02); box-shadow: 0 4px 12px rgba(50,118,177,.3); }
+
+    /* loading spinner inside table */
+    .db-loading { text-align: center; padding: 40px; color: #94a3b8; }
+    .db-loading i { font-size: 24px; }
+</style>
+
+<div class="db-module {{module_id_class}}">
+
+    <!-- ============================================================ -->
+    <!-- NAV PILLS (view switcher)                                     -->
+    <!-- ============================================================ -->
+    <div class="db-nav-pills">
+        <button class="db-pill active" data-view="viewDashboard" id="pillDashboard">
+            <i class="fa fa-tachometer"></i> Dashboard
+        </button>
+        <button class="db-pill" data-view="viewMatrix" id="pillMatrix">
+            <i class="fa fa-table"></i> Data Matriks
+        </button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- VIEW 1: DASHBOARD (hanya ringkasan, TANPA daftar matriks)    -->
+    <!-- ============================================================ -->
+    <div class="db-view active" id="viewDashboard">
+
+        <!-- Judul halaman -->
+        <div class="db-page-title">
+            <h2>Beranda Utama</h2>
+            <p>Selamat datang di Sistem Informasi Data Gender dan Anak (SIGA).</p>
+        </div>
+
+        <!-- Hero / About Section -->
+        <div class="db-hero">
+            <div class="db-hero-content">
+                <h1 class="db-hero-title">Pusat Data Strategis Pemberdayaan Perempuan & Perlindungan Anak</h1>
+                <p class="db-hero-desc">
+                    Web ini merupakan platform integrasi data pilah yang berfungsi untuk menyajikan informasi akurat mengenai indikator gender dan anak di seluruh instansi. 
+                    Melalui sistem ini, pengambilan kebijakan berbasis data dapat dilakukan secara lebih efektif untuk mendukung program kesetaraan dan perlindungan hak anak.
+                </p>
+                <button class="db-hero-btn" id="btnGoToMatrix">
+                    <i class="fa fa-database"></i> Jelajahi Data Matriks
+                </button>
+            </div>
+        </div>
+
+        <!-- Welcome Banner -->
+        <div class="db-welcome">
+            <div class="db-welcome-icon"><i class="fa fa-user-circle"></i></div>
+            <div>
+                <h3>Selamat Datang, {{userData.nama}}</h3>
                 <p>Anda login sebagai <b>{{userData.level_name}}</b>. Selamat bekerja!</p>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-sm-7">
-            <div class="jarviswidget jarviswidget-color-blueDark">
-                <header>
-                    <span class="widget-icon"> <i class="fa fa-bar-chart-o"></i> </span>
-                    <h2>Statistik Pengisian Data per Tahun</h2>
-                </header>
-                <div>
-                    <div class="widget-body">
-                        <div id="chartContainer" style="height: 300px;"></div>
-                    </div>
-                </div>
+        <!-- Stat Cards -->
+        <div class="db-cards-grid">
+            <div class="db-card">
+                <div class="db-card-icon blue"><i class="fa fa-database"></i></div>
+                <div class="db-card-label">Total Matriks</div>
+                <div class="db-card-value" id="countMatrix">—</div>
+            </div>
+            <div class="db-card">
+                <div class="db-card-icon green"><i class="fa fa-building"></i></div>
+                <div class="db-card-label">Total Dinas</div>
+                <div class="db-card-value" id="countUnit">—</div>
+            </div>
+            <div class="db-card">
+                <div class="db-card-icon amber"><i class="fa fa-clock-o"></i></div>
+                <div class="db-card-label">Tahun Aktif</div>
+                <div class="db-card-value" id="activeYear">—</div>
+            </div>
+            <div class="db-card">
+                <div class="db-card-icon indigo"><i class="fa fa-check-circle"></i></div>
+                <div class="db-card-label">Status Database</div>
+                <div class="db-card-value" style="font-size:18px; color:#22c55e;" id="dbStatus">Online</div>
             </div>
         </div>
-        <div class="col-sm-5">
-            <div class="jarviswidget jarviswidget-color-greenLight">
-                <header>
-                    <span class="widget-icon"> <i class="fa fa-info"></i> </span>
-                    <h2>Ringkasan Sistem</h2>
-                </header>
-                <div>
-                    <div class="widget-body">
-                        <div class="row">
-                            <div class="col-xs-6 text-center">
-                                <div style="padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                                    <h1 id="countMatrix" style="font-size: 40px; margin: 0; color: #3276b1;">0</h1>
-                                    <p class="text-muted">Total Matrix</p>
-                                </div>
-                            </div>
-                            <div class="col-xs-6 text-center">
-                                <div style="padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                                    <h1 id="countUnit" style="font-size: 40px; margin: 0; color: #5db85d;">0</h1>
-                                    <p class="text-muted">Total Dinas</p>
-                                </div>
-                            </div>
-                        </div>
-                        <hr>
-                        <p><i class="fa fa-clock-o"></i> Tahun Aktif: <b id="activeYear">2026</b></p>
-                        <p><i class="fa fa-database"></i> Status Database: <span class="label label-success">Online</span></p>
-                    </div>
-                </div>
+
+        <!-- Chart Widget -->
+        <div class="db-chart-box">
+            <div class="db-box-header">
+                <div class="db-box-title"><i class="fa fa-bar-chart"></i> Statistik Pengisian Data per Tahun</div>
+            </div>
+            <div class="db-box-body">
+                <div id="chartContainer" style="height: 320px;"></div>
             </div>
         </div>
-    </div>
+
+    </div><!-- end #viewDashboard -->
+
+    <!-- ============================================================ -->
+    <!-- VIEW 2: DATA MATRIKS (pencarian + tabel, TANPA dashboard)    -->
+    <!-- ============================================================ -->
+    <div class="db-view" id="viewMatrix">
+
+        <!-- Judul halaman -->
+        <div class="db-page-title">
+            <h2>Data Matriks</h2>
+            <p>Kelola dan cari daftar matriks dari seluruh instansi.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="db-search-bar">
+            <div class="db-search-input-wrap">
+                <i class="fa fa-search"></i>
+                <input type="text" id="dbSearchKeyword" class="db-search-input"
+                       placeholder="Cari nama matriks, kode, atau instansi…">
+            </div>
+            <select id="dbFilterTahun" class="db-filter-select">
+                <option value="">Semua Tahun</option>
+                <option>2026</option><option>2025</option>
+                <option>2024</option><option>2023</option><option>2022</option>
+            </select>
+            <button class="db-search-btn" id="dbBtnSearch">
+                <i class="fa fa-search"></i> Terapkan
+            </button>
+            <button class="db-search-btn" id="dbBtnReset"
+                    style="background:#64748b;">
+                <i class="fa fa-times"></i> Reset
+            </button>
+        </div>
+
+        <!-- Matrix Table -->
+        <div class="db-matrix-table-box">
+            <div class="db-box-header">
+                <div class="db-box-title"><i class="fa fa-table"></i> Daftar Matriks</div>
+                <span id="dbMatrixCount" style="font-size:12px; color:#94a3b8;"></span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="db-table">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Judul Data Pilah</th>
+                            <th>Instansi</th>
+                            <th>Aktif</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dbMatrixBody">
+                        <tr class="db-empty-row">
+                            <td colspan="4">
+                                <i class="fa fa-circle-o-notch fa-spin"></i>
+                                Memuat data…
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- end #viewMatrix -->
+
 </div>

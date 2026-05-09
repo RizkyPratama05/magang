@@ -4,8 +4,8 @@
  * Endpoint untuk ekspor data matriks dari dashboard publik ke PDF atau Excel.
  * Dipanggil via GET: public-export.php?type=pdf&kode=01&tahun=2024
  */
-ini_set("display_errors", 0);
-error_reporting(0);
+// ini_set("display_errors", 0);
+// error_reporting(0);
 
 if (!defined('PATH_TEMPLATE')) define('PATH_TEMPLATE', 'template/smartadmin/');
 require_once dirname(__FILE__).'/lib/server/class.os.php';
@@ -100,14 +100,19 @@ function buildHtmlTable($judul, $instansi, $tahun, $headerBaris, $koloms, $baris
 
 
 // =====================================================================
-// EXPORT PDF (menggunakan mPDF via class.html2pdf.php)
+// EXPORT PDF (menggunakan mPDF via vendor autoloader)
 // =====================================================================
 if ($type === 'pdf') {
-    require_once dirname(__FILE__).'/lib/server/class.html2pdf.php';
+    require_once dirname(__FILE__) . '/vendor/autoload.php';
     
-    $pdf = new Html2pdf();
-    $pdf->setPageSize(297, 210, 'L'); // A4 Landscape
-    $pdf->setMargins(10, 10, 10, 10);
+    $mpdf = new \Mpdf\Mpdf([
+        'mode' => 'utf-8',
+        'format' => 'A4-L',
+        'margin_left' => 10,
+        'margin_right' => 10,
+        'margin_top' => 10,
+        'margin_bottom' => 10
+    ]);
     
     $css = '
         body { font-family: Arial, sans-serif; }
@@ -119,43 +124,42 @@ if ($type === 'pdf') {
         td:first-child { text-align: center; }
         td:nth-child(2) { text-align: left; font-weight: bold; }
     ';
-    $pdf->addCss($css);
     
     $tableHtml = buildHtmlTable($judul, $instansi, $tahun, $headerBaris, $koloms, $barisList, $cellMap);
-    $pdf->addHtml($tableHtml);
+    
+    $mpdf->WriteHTML($css, \Mpdf\HTMLParserMode::HEADER_CSS);
+    $mpdf->WriteHTML($tableHtml, \Mpdf\HTMLParserMode::HTML_BODY);
     
     $filename = 'Laporan_' . preg_replace('/[^A-Za-z0-9_]/', '_', $judul) . '_' . $tahun . '.pdf';
     
     // Stream langsung ke browser
-    $pdf->mpdf->Output($filename, 'I');
+    $mpdf->Output($filename, 'I');
     exit;
 }
 
 
 // =====================================================================
-// EXPORT EXCEL (menggunakan PHPExcel native — tanpa template)
+// EXPORT EXCEL (menggunakan PhpSpreadsheet native — tanpa template)
 // =====================================================================
 if ($type === 'excel') {
-    $pathPHPExcel = dirname(__FILE__) . '/lib/phpexcel/PHPExcel.php';
-    $pathPHPExcel = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $pathPHPExcel);
-    require_once($pathPHPExcel);
+    require_once dirname(__FILE__) . '/vendor/autoload.php';
     
-    $objPHPExcel = new PHPExcel();
+    $objPHPExcel = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
     $sheet = $objPHPExcel->getActiveSheet();
     $sheet->setTitle('Data Pilah');
     
     // ---- TITLE ROW ----
     $totalCols = count($koloms) + 2; // No + Nama Baris + Kolom data
-    $lastColLetter = PHPExcel_Cell::stringFromColumnIndex($totalCols - 1);
+    $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
     
     $sheet->mergeCells('A1:' . $lastColLetter . '1');
     $sheet->setCellValue('A1', $judul . ' — Tahun ' . $tahun);
     $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-    $sheet->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
     
     $sheet->mergeCells('A2:' . $lastColLetter . '2');
     $sheet->setCellValue('A2', 'Instansi: ' . $instansi);
-    $sheet->getStyle('A2')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
     $sheet->getStyle('A2')->getFont()->setSize(11)->setItalic(true);
     
     // ---- HEADER ROW ----
@@ -163,10 +167,10 @@ if ($type === 'excel') {
     $sheet->setCellValue('A' . $headerRow, 'No');
     $sheet->setCellValue('B' . $headerRow, $headerBaris);
     
-    $colIdx = 2; // Start from column C (index 2)
+    $colIdx = 3; // Start from column C (index 3 in PhpSpreadsheet)
     foreach ($koloms as $k) {
         $label = $k['header_kolom'] ? $k['header_kolom'] . ' ' . $k['nama_kolom'] : $k['nama_kolom'];
-        $colLetter = PHPExcel_Cell::stringFromColumnIndex($colIdx);
+        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
         $sheet->setCellValue($colLetter . $headerRow, $label);
         $colIdx++;
     }
@@ -176,12 +180,12 @@ if ($type === 'excel') {
     $headerStyle = array(
         'font' => array('bold' => true, 'color' => array('rgb' => 'FFFFFF'), 'size' => 11),
         'fill' => array(
-            'type' => PHPExcel_Style_Fill::FILL_SOLID,
+            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
             'color' => array('rgb' => '3276B1')
         ),
-        'alignment' => array('horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER),
+        'alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER),
         'borders' => array(
-            'allborders' => array('style' => PHPExcel_Style_Border::BORDER_THIN)
+            'allBorders' => array('borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
         )
     );
     $sheet->getStyle($headerRange)->applyFromArray($headerStyle);
@@ -194,11 +198,11 @@ if ($type === 'excel') {
         $sheet->setCellValue('B' . $dataRow, $b['nama_baris']);
         $sheet->getStyle('B' . $dataRow)->getFont()->setBold(true);
         
-        $colIdx = 2;
+        $colIdx = 3;
         foreach ($koloms as $k) {
             $key = $b['kode_baris'] . '|' . $k['kode_kolom'];
             $val = isset($cellMap[$key]) ? (float)$cellMap[$key] : 0;
-            $colLetter = PHPExcel_Cell::stringFromColumnIndex($colIdx);
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
             $sheet->setCellValue($colLetter . $dataRow, $val);
             $colIdx++;
         }
@@ -211,26 +215,26 @@ if ($type === 'excel') {
     $dataRange = 'A' . ($headerRow + 1) . ':' . $lastColLetter . $lastDataRow;
     $dataStyle = array(
         'borders' => array(
-            'allborders' => array('style' => PHPExcel_Style_Border::BORDER_THIN)
+            'allBorders' => array('borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
         )
     );
     $sheet->getStyle($dataRange)->applyFromArray($dataStyle);
     $sheet->getStyle('A' . ($headerRow + 1) . ':A' . $lastDataRow)->getAlignment()
-        ->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
     
     // Auto-size columns
-    for ($i = 0; $i < $totalCols; $i++) {
-        $sheet->getColumnDimension(PHPExcel_Cell::stringFromColumnIndex($i))->setAutoSize(true);
+    for ($i = 1; $i <= $totalCols; $i++) {
+        $sheet->getColumnDimension(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i))->setAutoSize(true);
     }
     
     // ---- OUTPUT (stream ke browser) ----
-    $filename = 'Laporan_' . preg_replace('/[^A-Za-z0-9_]/', '_', $judul) . '_' . $tahun . '.xls';
+    $filename = 'Laporan_' . preg_replace('/[^A-Za-z0-9_]/', '_', $judul) . '_' . $tahun . '.xlsx';
     
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment;filename="' . $filename . '"');
     header('Cache-Control: max-age=0');
     
-    $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+    $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($objPHPExcel, 'Xlsx');
     $objWriter->save('php://output');
     
     $objPHPExcel->disconnectWorksheets();

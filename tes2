@@ -1,2 +1,0 @@
-insert into data_per_format (tahun, kolom, baris, count_l, count_p, count_lp) VALUES
-  (2016,'TENAGA KERJA AKAD','Berbah',0,0,0),

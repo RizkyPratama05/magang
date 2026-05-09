@@ -1,4 +1,5 @@
-$(document).ready(function() {
+(function() {
+    MyApp.renderMainTpl();
     var $me = MyApp.$me;
     var $module = MyApp.module;
     var oTable;
@@ -136,4 +137,5 @@ $(document).ready(function() {
     initGrid();
     initEvents();
     $me('.overlay').hide();
-});
+
+})();
